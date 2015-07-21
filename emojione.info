@@ -1,0 +1,7 @@
+name = Emoji One Smiley
+description = This module provides the EmojiOne library for Drupal. Emoji library provided free by http://emojione.com
+core = 7.x
+version = "7.x-1.0"
+package = "Input filters"
+dependencies[] = filter
+dependencies[] = libraries

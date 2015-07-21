@@ -1,0 +1,45 @@
+<?php
+/**
+ * @file
+ * Install the EmojiOne Smiley module.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function emojione_requirements($phase) {
+  $requirements = array();
+  $t = get_t();
+
+  if ($phase == 'runtime') {
+    $t = get_t();
+    $library = libraries_detect('emojione');
+    $error_type = isset($library['error']) ? drupal_ucfirst($library['error']) : '';
+    $error_message = isset($library['error message']) ? $library['error message'] : '';
+
+    if (empty($library['installed'])) {
+      $requirements['emojione'] = array(
+        'title' => $t('Emoji One library'),
+        'value' => $t('@e: maximum @a', array('@e' => $error_type, '@a' => EMOJIONE_MAX_PLUGIN_VERSION)),
+        'severity' => REQUIREMENT_ERROR,
+        'description' => $t('!error You need to download the !emojione, extract the archive and place the emojione directory in the %path directory on your server.', array('!error' => $error_message, '!emojione' => l($t('EmojiOne library'), $library['download url']), '%path' => 'sites/all/libraries')),
+      );
+    }
+    elseif (version_compare($library['version'], EMOJIONE_MAX_PLUGIN_VERSION, '<=')) {
+      $requirements['emojione'] = array(
+        'title' => $t('Emoji One library'),
+        'severity' => REQUIREMENT_OK,
+        'value' => $library['version'],
+      );
+    }
+    else {
+      $requirements['emojione'] = array(
+        'title' => $t('Emoji One library'),
+        'value' => $t('At least @a', array('@a' => EMOJIONE_MAX_PLUGIN_VERSION)),
+        'severity' => REQUIREMENT_ERROR,
+        'description' => $t('You need to download a earlier version of the !emojione and replace the newer version located in the %path directory on your server.', array('!emojione' => l($t('EmojiOne library'), $library['download url']), '%path' => $library['library path'])),
+      );
+    }
+  }
+  return $requirements;
+}

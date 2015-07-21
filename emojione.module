@@ -1,0 +1,93 @@
+<?php
+/**
+ * @file
+ * This module provides the EmojiOne library for Drupal. Emoji library provided free by http://emojione.com
+ */
+
+ // Define some constants for fetching and placing the library during setup.
+define('EMOJIONE_DOWNLOAD_URI', 'https://github.com/Ranks/emojione/archive/v1.5.0.tar.gz');
+
+// Define a constant of max library version.
+define('EMOJIONE_MAX_PLUGIN_VERSION', '1.5.0');
+
+// Define a constant to keep track of library version.
+define('EMOJIONE_VERSION_REGEX', '@"version":\s+"([0-9\.-]+)"@');
+
+ /**
+  * Implements hook_libraries().
+  */
+ function emojione_libraries_info() {
+   $library_path = libraries_get_path('emojione', FALSE);
+
+   if (empty($library_path)) {
+     drupal_set_message(t(
+       'Please download v1.5.0 of the !link library and place it in libraries under /emojione.
+       So that the php file is available under .../libraries/emojione/lib/php/libraries/emojione/lib/php/autoload.php',
+       array('!link' => l(t('EmojiOne'), 'https://github.com/Ranks/emojione/archive/v1.5.0.tar.gz'))), 'warning');
+   }
+
+   $libraries['emojione'] = array(
+     'name' => 'Emoji One library',
+     'vendor url' => 'http://www.emojione.com/',
+     'download url' => EMOJIONE_DOWNLOAD_URI,
+     'version arguments' => array(
+       'file' => 'bower.json',
+       'pattern' => EMOJIONE_VERSION_REGEX,
+       'lines' => 4,
+     ),
+     'files' => array(
+        'php' => array(
+          'lib/php/autoload.php',
+        ),
+        'css' => array(
+          'assets/css/emojione.min.css',
+        ),
+      ),
+   );
+   return $libraries;
+ }
+
+/**
+ * Implements hook_filter_info().
+ */
+function emojione_filter_info() {
+  $filters['emoji_one'] = array(
+    'title' => t('Emoji One Smileys'),
+    'description' => t('Convert Emoji shortnames to images. Emoji provided free by http://emojione.com'),
+    'process callback' => '_emoji_one',
+    'tips callback'  => '_emoji_one_tips',
+  );
+
+  return $filters;
+}
+/**
+ * Filter callback for our emojione filter.
+ */
+function _emoji_one($text, $filter) {
+
+  $library = libraries_detect('emojione');
+  if ($library['installed']) {
+    libraries_load('emojione');
+    //TODO: use optional features as settings
+    // ###############################################
+    // Optional:
+    // default is PNG but you may also use SVG
+    //Emojione\Emojione::$imageType = 'svg'; // or png (default)
+
+    // if you want to host the images somewhere else
+    // you can easily change the default paths
+    //Emojione\Emojione::$imagePathPNG = './../assets/png/'; // defaults to jsdelivr's free CDN
+    //Emojione\Emojione::$imagePathSVG = './../assets/svg/'; // defaults to jsdelivr's free CDN
+    // ###############################################
+
+    return Emojione\Emojione::shortnameToImage($text);
+  }
+}
+/**
+ * Filter tips callback for emojione filter.
+ */
+function _emoji_one_tips($filter, $format, $long = FALSE) {
+  $tipp = t('Es werden alle Emoji One shortnames in Smilies konvertiert, welche shortnames zur Verfügung stehen findest du im <a href="@emojicode">Emoji Cheat Sheet</a>. Emoji provided free by http://emojione.com', array('@emojicode' => 'http://emoji.codes'));
+  return $tipp;
+
+}
